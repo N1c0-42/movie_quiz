@@ -256,20 +256,27 @@
         @media (max-width: 1024px) {
             .container { 
                 grid-template-columns: repeat(2, 1fr); /* 2 Spalten auf Tablets */
-                gap: 20px;
+                gap: 15px;
             }
-            h1 { font-size: 2.2rem; }
-            body { padding: 20px 15px; }
-            .player-card { padding: 25px 15px; }
+            h1 { font-size: 2rem; margin-bottom: 20px; }
+            body { padding: 15px 10px; }
+            .total-progress-wrapper { margin-bottom: 20px; padding: 15px; }
+            .player-card { padding: 20px 15px; }
+            .score { font-size: 3.5rem; margin: 5px 0 10px 0; }
+            .player-name { font-size: 1.3rem; }
+            .btn { padding: 12px 20px; font-size: 1.1rem; margin: 0 3px; }
+            .stats-box { padding: 15px; margin-top: 10px; }
+            .btn-small { padding: 8px 15px; font-size: 0.9rem; }
+            .reset-container { margin-top: 30px; }
+            .reset-btn { padding: 12px 24px; font-size: 1rem; }
         }
 
         /* Mobile Optimierungen */
         @media (max-width: 768px) {
-            h1 { font-size: 1.8rem; letter-spacing: 2px; }
-            .container { grid-template-columns: 1fr; /* 1 Spalte auf Handys */ }
-            .score { font-size: 3.5rem; }
-            .btn { padding: 12px 20px; font-size: 1.2rem; }
-            .btn-small { padding: 8px 16px; font-size: 0.9rem; }
+            h1 { font-size: 1.6rem; letter-spacing: 1px; }
+            .container { grid-template-columns: 1fr; /* 1 Spalte auf Handys */ gap: 15px; }
+            .score { font-size: 3rem; }
+            .btn { padding: 10px 15px; font-size: 1.1rem; }
         }
     </style>
 </head>
