@@ -200,11 +200,8 @@ else:
     if role == "Moderator (Tablet)":
         st.title("Moderator Zentrale 🎤")
         
-        st.info("💡 **Hinweis für Streamlit Cloud:** Wenn die App online gehostet wird, ersetze die IP-Adresse unten durch den echten Link deiner App (z.B. `https://deine-app.streamlit.app`), damit der QR-Code funktioniert.")
-        
-        local_ip = get_local_ip()
-        default_url = f"http://{local_ip}:8501"
-        base_url = st.text_input("App-Link für QR-Code:", value=default_url)
+        # Fest hinterlegter Link zur Streamlit App
+        base_url = "https://moviequizgit-mwatvzmqtcp3aq7hryuvxc.streamlit.app/"
         player_url = f"{base_url.rstrip('/')}/?view=player"
         
         col1, col2 = st.columns([1, 2])
