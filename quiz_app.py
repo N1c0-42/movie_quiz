@@ -200,17 +200,21 @@ else:
     if role == "Moderator (Tablet)":
         st.title("Moderator Zentrale 🎤")
         
+        st.info("💡 **Hinweis für Streamlit Cloud:** Wenn die App online gehostet wird, ersetze die IP-Adresse unten durch den echten Link deiner App (z.B. `https://deine-app.streamlit.app`), damit der QR-Code funktioniert.")
+        
         local_ip = get_local_ip()
-        player_url = f"http://{local_ip}:8501/?view=player"
+        default_url = f"http://{local_ip}:8501"
+        base_url = st.text_input("App-Link für QR-Code:", value=default_url)
+        player_url = f"{base_url.rstrip('/')}/?view=player"
         
         col1, col2 = st.columns([1, 2])
         with col1:
             qr = qrcode.make(player_url)
             buf = BytesIO()
             qr.save(buf)
-            st.image(buf.getvalue(), caption="Scan für Teilnehmer", width=150)
+            st.image(buf.getvalue(), caption="Scan für Teilnehmer", width=200)
         with col2:
-            st.write(f"Link: `{player_url}`")
+            st.write(f"Direktlink: `{player_url}`")
             if st.button("🗑️ Liste für neue Runde leeren"):
                 save_data({})
                 st.rerun()
