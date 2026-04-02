@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filmquiz Deluxe Scoreboard</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+        
+        :root {
+            --primary: #f5c518; /* IMDb Gold */
+            --bg-dark: #0f172a; /* Slate 900 */
+            --bg-darker: #020617; /* Slate 950 */
+            --card-bg: rgba(30, 41, 59, 0.7); /* Slate 800 with opacity */
+            --text-main: #f8fafc; /* Slate 50 */
+            --text-muted: #94a3b8; /* Slate 400 */
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at top, var(--bg-dark), var(--bg-darker));
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        h1 { 
+            color: var(--primary); 
+            text-transform: uppercase; 
+            margin-bottom: 40px; 
+            letter-spacing: 4px;
+            font-weight: 800;
+            font-size: 2.5rem;
+            text-shadow: 0 0 20px rgba(245, 197, 24, 0.3);
+            text-align: center;
+        }
+        
+        /* Global Progress Style */
+        .total-progress-wrapper {
+            width: 100%;
+            max-width: 1200px;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 20px 25px;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-sizing: border-box;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .total-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+        .total-bar-bg {
+            background: rgba(0,0,0,0.3);
+            height: 12px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .total-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-blue), #8b5cf6);
+            width: 0%;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 25px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .player-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 30px 20px;
+            border-radius: 24px;
+            text-align: center;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .player-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .leader {
+            border: 1px solid rgba(245, 197, 24, 0.5);
+            transform: scale(1.02) translateY(-5px);
+            box-shadow: 0 20px 40px rgba(245, 197, 24, 0.15), inset 0 0 20px rgba(245, 197, 24, 0.05);
+        }
+
+        .leader:hover {
+            transform: scale(1.02) translateY(-10px);
+        }
+
+        .player-name { 
+            font-size: 1.5rem; 
+            font-weight: 600; 
+            margin-bottom: 5px; 
+            letter-spacing: 1px;
+        }
+        
+        .score { 
+            font-size: 4.5rem; 
+            font-weight: 800; 
+            color: var(--primary); 
+            margin: 10px 0 20px 0; 
+            line-height: 1;
+            text-shadow: 0 0 15px rgba(245, 197, 24, 0.2);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            border: none;
+            color: white;
+            padding: 16px 28px; /* Größeres Touch-Target für Tablets */
+            font-size: 1.3rem; /* Größere Schrift */
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            font-family: 'Poppins', sans-serif;
+            flex: 1; /* Buttons nehmen gleich viel Platz ein */
+            margin: 0 5px;
+        }
+        
+        .btn-plus { 
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .btn-plus:hover { background: rgba(16, 185, 129, 0.3); }
+        
+        .btn-minus { 
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--accent-red);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .btn-minus:hover { background: rgba(239, 68, 68, 0.3); }
+        
+        .btn:active { transform: scale(0.95); }
+
+        .stats-box {
+            background: rgba(0,0,0,0.2);
+            padding: 20px; /* Mehr Platz innen */
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            margin-top: 15px;
+        }
+
+        .stats-label { 
+            font-size: 0.9rem; /* Etwas größer für Lesbarkeit */
+            color: var(--text-muted); 
+            margin-bottom: 10px; 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .progress-container {
+            background-color: rgba(0,0,0,0.4);
+            height: 8px; /* Dickerer Balken */
+            border-radius: 4px;
+            margin: 12px 0 20px 0;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-blue), #60a5fa);
+            width: 0%;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 4px;
+        }
+
+        .mini-controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px; /* Mehr Abstand zwischen kleinen Buttons */
+        }
+
+        .btn-small { 
+            padding: 10px 20px; /* Größeres Touch-Target */
+            font-size: 1rem; /* Größere Schrift */
+            background: rgba(255, 255, 255, 0.05); 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            flex: 1; /* Gleichmäßige Aufteilung */
+        }
+        .btn-small:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+        }
+
+        .reset-container { 
+            margin-top: 60px; 
+            opacity: 0.4; 
+            transition: opacity 0.3s;
+        }
+        .reset-container:hover { opacity: 1; }
+        
+        .reset-btn { 
+            background: transparent; 
+            border: 1px solid var(--text-muted); 
+            color: var(--text-muted); 
+            padding: 16px 32px; /* Größerer Button */
+            cursor: pointer; 
+            border-radius: 16px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.1rem; /* Größere Schrift */
+            transition: all 0.3s;
+        }
+        .reset-btn:hover { 
+            color: var(--accent-red); 
+            border-color: var(--accent-red); 
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* Tablet Optimierungen */
+        @media (max-width: 1024px) {
+            .container { 
+                grid-template-columns: repeat(2, 1fr); /* 2 Spalten auf Tablets */
+                gap: 20px;
+            }
+            h1 { font-size: 2.2rem; }
+            body { padding: 20px 15px; }
+            .player-card { padding: 25px 15px; }
+        }
+
+        /* Mobile Optimierungen */
+        @media (max-width: 768px) {
+            h1 { font-size: 1.8rem; letter-spacing: 2px; }
+            .container { grid-template-columns: 1fr; /* 1 Spalte auf Handys */ }
+            .score { font-size: 3.5rem; }
+            .btn { padding: 12px 20px; font-size: 1.2rem; }
+            .btn-small { padding: 8px 16px; font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🎬 Filmquiz Scoreboard</h1>
+
+    <div class="total-progress-wrapper">
+        <div class="total-stats">
+            <span>GESAMTFORTSCHRITT</span>
+            <span id="total-text">0 / 80 Fragen (0%)</span>
+        </div>
+        <div class="total-bar-bg">
+            <div id="total-fill" class="total-bar-fill"></div>
+        </div>
+    </div>
+
+    <div class="container" id="board"></div>
+
+    <div class="reset-container">
+        <button class="reset-btn" onclick="resetAll()">Daten löschen & Neustart</button>
+    </div>
+
+    <script>
+        const playerNames = ["Daniel", "Marlon", "Sabbl", "Nico"];
+        let gameState = JSON.parse(localStorage.getItem('quizState')) || {
+            Daniel: { score: 0, questions: 0 },
+            Marlon: { score: 0, questions: 0 },
+            Sabbl: { score: 0, questions: 0 },
+            Nico: { score: 0, questions: 0 }
+        };
+
+        function render() {
+            const board = document.getElementById('board');
+            board.innerHTML = '';
+
+            let totalQuestionsAsked = 0;
+            let maxScore = -999;
+            
+            // Stats berechnen
+            playerNames.forEach(n => {
+                totalQuestionsAsked += gameState[n].questions;
+                if(gameState[n].score > maxScore) maxScore = gameState[n].score;
+            });
+
+            // Globalen Balken updaten
+            const totalPercent = (totalQuestionsAsked / 80) * 100;
+            document.getElementById('total-fill').style.width = totalPercent + "%";
+            document.getElementById('total-text').innerText = `${totalQuestionsAsked} / 80 Fragen (${Math.round(totalPercent)}%)`;
+
+            playerNames.forEach(name => {
+                const p = gameState[name];
+                const isLeader = p.score === maxScore && maxScore > 0;
+                const pPercent = (p.questions / 20) * 100;
+
+                const card = document.createElement('div');
+                card.className = `player-card ${isLeader ? 'leader' : ''}`;
+                card.innerHTML = `
+                    <div class="player-name">${isLeader ? '🏆 ' : ''}${name}</div>
+                    <div class="score">${p.score}</div>
+                    
+                    <div class="controls">
+                        <button class="btn btn-minus" onclick="updateScore('${name}', -1)">-</button>
+                        <button class="btn btn-plus" onclick="updateScore('${name}', 1)">+</button>
+                    </div>
+
+                    <div class="stats-box">
+                        <div class="stats-label">Eigene Fragen: ${p.questions} / 20</div>
+                        <div class="progress-container">
+                            <div class="progress-bar" style="width: ${pPercent}%"></div>
+                        </div>
+                        <div class="mini-controls">
+                            <button class="btn-small" onclick="updateQuestion('${name}', -1)">-</button>
+                            <button class="btn-small" onclick="updateQuestion('${name}', 1)">+ 1</button>
+                        </div>
+                    </div>
+                `;
+                board.appendChild(card);
+            });
+            localStorage.setItem('quizState', JSON.stringify(gameState));
+        }
+
+        function updateScore(name, val) {
+            gameState[name].score += val;
+            render();
+        }
+
+        function updateQuestion(name, val) {
+            let newVal = gameState[name].questions + val;
+            if(newVal >= 0 && newVal <= 20) {
+                gameState[name].questions = newVal;
+                render();
+            }
+        }
+
+        function resetAll() {
+            if(confirm("Sicher? Alle Punkte und der Fortschritt werden gelöscht!")) {
+                localStorage.removeItem('quizState');
+                location.reload();
+            }
+        }
+
+        render();
+    </script>
+</body>
+</html>
