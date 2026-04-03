@@ -43,7 +43,7 @@ MODERN_STYLE = """
         to { opacity: 1; transform: translateY(0); } 
     }
     
-    .stButton>button {
+    .stButton>button, .stFormSubmitButton>button {
         width: 100%;
         background-color: #f5c518 !important; /* Fallback für Browser ohne Gradient */
         background: linear-gradient(135deg, #f5c518, #eab308) !important;
@@ -58,14 +58,14 @@ MODERN_STYLE = """
         box-shadow: 0 4px 15px rgba(245, 197, 24, 0.3);
     }
     
-    .stButton>button:hover {
+    .stButton>button:hover, .stFormSubmitButton>button:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(245, 197, 24, 0.4);
         background: linear-gradient(135deg, #fbbf24, #f5c518) !important;
     }
     
     /* Explizites Ausgrauen für deaktivierte Buttons (z.B. nach Punktevergabe) */
-    .stButton>button:disabled {
+    .stButton>button:disabled, .stFormSubmitButton>button:disabled {
         background: rgba(255, 255, 255, 0.1) !important;
         color: rgba(255, 255, 255, 0.3) !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -74,7 +74,7 @@ MODERN_STYLE = """
         cursor: not-allowed;
     }
 
-    .stButton>button:active {
+    .stButton>button:active, .stFormSubmitButton>button:active {
         transform: translateY(0);
     }
 
