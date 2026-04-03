@@ -238,19 +238,29 @@ if is_player:
         
         st.success("Deine Antwort ist beim Moderator.")
         
-        # LIVE STATUS FRAGMENT
+    # LIVE STATUS FRAGMENT
         @st.fragment(run_every=3)
         def show_player_status():
             current_data = load_data()
             current_answers = current_data.get("answers", {})
             num_ready = len(current_answers)
+            
+            # Wer hat schon abgegeben?
+            ready_names = ", ".join([f"✅ {name}" for name in current_answers.keys()])
+            if not ready_names: ready_names = "Noch niemand..."
+
             st.markdown(f"""
-                <div style="text-align:center; padding: 20px; border: 1px dashed #f5c518; border-radius: 15px; background: rgba(245, 197, 24, 0.05);">
+                <div style="text-align:center; padding: 20px; border: 1px dashed #f5c518; border-radius: 15px; background: rgba(245, 197, 24, 0.05); margin-bottom: 20px;">
                     <span style="font-size: 1.5rem; font-weight: 600;">{num_ready} / 3</span><br>
-                    Teilnehmer haben bereits abgegeben.<br>
+                    <div style="margin: 10px 0; font-size: 0.9rem; color: #94a3b8;">{ready_names}</div>
                     <small style="opacity: 0.7;">Warte auf die nächste Runde (automatisch)...</small>
                 </div>
             """, unsafe_allow_html=True)
+            
+            # Check for Reset inside Fragment to force UI switch
+            global_last_clear_inner = current_data.get("last_clear", 0)
+            if global_last_clear_inner > st.session_state.last_sync:
+                st.rerun()
         
         show_player_status()
         
