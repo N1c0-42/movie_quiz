@@ -206,12 +206,13 @@ if is_player:
     # Daten laden für Sync und Status
     data = load_data()
     global_last_clear = data.get("last_clear", 0)
-    current_answers = data.get("answers", {})
 
     # Automatischer Reset, wenn der Moderator die Liste geleert hat
     if global_last_clear > st.session_state.last_sync:
         st.session_state.submitted = False
         st.session_state.last_sync = global_last_clear
+        if "last_answer" in st.session_state:
+            del st.session_state.last_answer
         st.rerun()
 
     if st.session_state.player_name is None:
@@ -225,33 +226,53 @@ if is_player:
     elif st.session_state.submitted:
         st.title("Abgeschickt!")
         st.markdown(f'<div class="name-badge">{st.session_state.player_name}</div>', unsafe_allow_html=True)
+        
+        # Eigene Antwort anzeigen
+        if "last_answer" in st.session_state:
+            st.markdown(f"""
+                <div style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 12px; border-left: 4px solid #f5c518; margin-bottom: 20px;">
+                    <small style="opacity: 0.6;">Deine Antwort:</small><br>
+                    <div style="font-size: 1.1rem; margin-top: 5px;">{st.session_state.last_answer}</div>
+                </div>
+            """, unsafe_allow_html=True)
+        
         st.success("Deine Antwort ist beim Moderator.")
         
-        # Status-Anzeige (Pulsierender Text)
-        num_ready = len(current_answers)
-        st.markdown(f"""
-            <div style="text-align:center; padding: 20px; border: 1px dashed #f5c518; border-radius: 15px; background: rgba(245, 197, 24, 0.05);">
-                <span style="font-size: 1.5rem; font-weight: 600;">{num_ready} / 4</span><br>
-                Teilnehmer haben bereits abgegeben.<br>
-                <small style="opacity: 0.7;">Warte auf die nächste Runde (automatisch)...</small>
-            </div>
-        """, unsafe_allow_html=True)
+        # LIVE STATUS FRAGMENT
+        @st.fragment(run_every=3)
+        def show_player_status():
+            current_data = load_data()
+            current_answers = current_data.get("answers", {})
+            num_ready = len(current_answers)
+            st.markdown(f"""
+                <div style="text-align:center; padding: 20px; border: 1px dashed #f5c518; border-radius: 15px; background: rgba(245, 197, 24, 0.05);">
+                    <span style="font-size: 1.5rem; font-weight: 600;">{num_ready} / 3</span><br>
+                    Teilnehmer haben bereits abgegeben.<br>
+                    <small style="opacity: 0.7;">Warte auf die nächste Runde (automatisch)...</small>
+                </div>
+            """, unsafe_allow_html=True)
         
-        # Manueller Button bleibt als Fallback
-        if st.button("Nächste Frage manuell laden"):
+        show_player_status()
+        
+        if st.button("✏️ Lösung korrigieren"):
             st.session_state.submitted = False
             st.rerun()
 
     else:
         st.title("Deine Antwort 📱")
         st.markdown(f'<div class="name-badge">{st.session_state.player_name}</div>', unsafe_allow_html=True)
+        
+        # Vorherige Antwort laden, falls vorhanden (für Korrekturen)
+        prev_val = st.session_state.get("last_answer", "")
+        
         with st.form("quiz_form"):
-            answer = st.text_area("Lösung:", placeholder="Tippe hier...", height=120)
+            answer = st.text_area("Lösung:", value=prev_val, placeholder="Tippe hier...", height=120)
             if st.form_submit_button("Antwort abschicken 🚀"):
                 if answer:
                     data = load_data()
                     data["answers"][st.session_state.player_name] = answer
                     save_data(data)
+                    st.session_state.last_answer = answer
                     st.session_state.submitted = True
                     st.rerun()
 else:
