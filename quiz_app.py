@@ -112,16 +112,24 @@ MODERN_STYLE = """
 """
 
 def load_data():
+    default = {"answers": {}, "last_clear": 0}
     if os.path.exists(DB_FILE):
         try:
             with open(DB_FILE, "r") as f:
-                return json.load(f)
-        except: return {}
-    return {}
+                data = json.load(f)
+                if "answers" not in data: # Migration alter Daten
+                    return {"answers": data, "last_clear": 0}
+                return data
+        except: return default
+    return default
 
 def save_data(data):
     with open(DB_FILE, "w") as f:
         json.dump(data, f)
+
+def reset_data():
+    data = {"answers": {}, "last_clear": time.time()}
+    save_data(data)
 
 def get_local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -144,9 +152,10 @@ is_player = query_params.get("view") == "player"
 @st.fragment(run_every=3) # Aktualisiert diesen Teil alle 3 Sekunden automatisch
 def show_answers_live():
     data = load_data()
-    if data:
-        st.subheader(f"Eingegangene Lösungen ({len(data)}):")
-        for user, ans in data.items():
+    answers = data.get("answers", {})
+    if answers:
+        st.subheader(f"Eingegangene Lösungen ({len(answers)}):")
+        for user, ans in answers.items():
             st.markdown(f"""
                 <div class="answer-card">
                     <small style="color: #f5c518; font-weight: 600; letter-spacing: 0.5px;">{user.upper()}</small><br>
@@ -159,10 +168,24 @@ def show_answers_live():
 if is_player:
     st.markdown("<style>[data-testid='stSidebar'] {display: none;}</style>", unsafe_allow_html=True)
     
+    # Session State Initialisierung
     if "player_name" not in st.session_state:
         st.session_state.player_name = None
     if "submitted" not in st.session_state:
         st.session_state.submitted = False
+    if "last_sync" not in st.session_state:
+        st.session_state.last_sync = 0
+
+    # Daten laden für Sync und Status
+    data = load_data()
+    global_last_clear = data.get("last_clear", 0)
+    current_answers = data.get("answers", {})
+
+    # Automatischer Reset, wenn der Moderator die Liste geleert hat
+    if global_last_clear > st.session_state.last_sync:
+        st.session_state.submitted = False
+        st.session_state.last_sync = global_last_clear
+        st.rerun()
 
     if st.session_state.player_name is None:
         st.title("Willkommen beim Quiz! 🍿")
@@ -175,8 +198,20 @@ if is_player:
     elif st.session_state.submitted:
         st.title("Abgeschickt!")
         st.markdown(f'<div class="name-badge">{st.session_state.player_name}</div>', unsafe_allow_html=True)
-        st.write("Deine Antwort ist beim Moderator. Warte auf die nächste Runde.")
-        if st.button("Nächste Frage beantworten"):
+        st.success("Deine Antwort ist beim Moderator.")
+        
+        # Status-Anzeige (Pulsierender Text)
+        num_ready = len(current_answers)
+        st.markdown(f"""
+            <div style="text-align:center; padding: 20px; border: 1px dashed #f5c518; border-radius: 15px; background: rgba(245, 197, 24, 0.05);">
+                <span style="font-size: 1.5rem; font-weight: 600;">{num_ready} / 5</span><br>
+                Teilnehmer haben bereits abgegeben.<br>
+                <small style="opacity: 0.7;">Warte auf die nächste Runde (automatisch)...</small>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        # Manueller Button bleibt als Fallback
+        if st.button("Nächste Frage manuell laden"):
             st.session_state.submitted = False
             st.rerun()
 
@@ -188,21 +223,22 @@ if is_player:
             if st.form_submit_button("Antwort abschicken 🚀"):
                 if answer:
                     data = load_data()
-                    data[st.session_state.player_name] = answer
+                    data["answers"][st.session_state.player_name] = answer
                     save_data(data)
                     st.session_state.submitted = True
                     st.rerun()
 else:
     # --- MODERATOR & SCOREBOARD ---
-    st.sidebar.title("🎬 Regie")
-    role = st.sidebar.radio("Ansicht:", ["Moderator (Tablet)", "Scoreboard (Beamer)"])
+    tab_regie, tab_score = st.tabs(["🎤 MODERATOR (Regie)", "🏆 SCOREBOARD (Beamer)"])
 
-    if role == "Moderator (Tablet)":
+    with tab_regie:
         st.title("Moderator Zentrale 🎤")
         
-        # Fest hinterlegter Link zur Streamlit App
-        base_url = "https://moviequizgit-mwatvzmqtcp3aq7hryuvxc.streamlit.app/"
-        player_url = f"{base_url.rstrip('/')}/?view=player"
+        # Dynamische URL Erkennung (lokal vs cloud)
+        if "localhost" in st.query_params or "127.0.0.1" in st.query_params:
+             player_url = f"http://{get_local_ip()}:8501/?view=player"
+        else:
+             player_url = "https://moviequizgit-mwatvzmqtcp3aq7hryuvxc.streamlit.app/?view=player"
         
         col1, col2 = st.columns([1, 2])
         with col1:
@@ -212,15 +248,14 @@ else:
             st.image(buf.getvalue(), caption="Scan für Teilnehmer", width=200)
         with col2:
             st.write(f"Direktlink: `{player_url}`")
-            if st.button("🗑️ Liste für neue Runde leeren"):
-                save_data({})
+            if st.button("🗑️ Liste für neue Runde leeren", use_container_width=True, type="primary"):
+                reset_data()
                 st.rerun()
 
         st.divider()
-        # HIER WIRD DIE LIVE-FUNKTION AUFGERUFEN
         show_answers_live()
 
-    elif role == "Scoreboard (Beamer)":
+    with tab_score:
         if os.path.exists(HTML_FILE):
             with open(HTML_FILE, "r", encoding="utf-8") as f:
                 html_content = f.read()
