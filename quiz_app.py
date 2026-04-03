@@ -104,6 +104,33 @@ MODERN_STYLE = """
         padding: 4px !important;
     }
 
+    /* Styling für die Tabs (Moderator Navigation) */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 10px;
+        background-color: rgba(30, 41, 59, 0.5);
+        padding: 8px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .stTabs [data-baseweb="tab"] {
+        height: 60px;
+        background-color: transparent !important;
+        border-radius: 12px !important;
+        border: none !important;
+        color: #94a3b8 !important;
+        font-weight: 600 !important;
+        font-size: 1.1rem !important;
+        transition: all 0.3s ease !important;
+        padding: 0 30px !important;
+    }
+
+    .stTabs [aria-selected="true"] {
+        background-color: #f5c518 !important;
+        color: #020617 !important;
+        box-shadow: 0 4px 15px rgba(245, 197, 24, 0.3);
+    }
+
     /* Verstecke Standard Streamlit Elemente für sauberen Look */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
@@ -190,7 +217,7 @@ if is_player:
     if st.session_state.player_name is None:
         st.title("Willkommen beim Quiz! 🍿")
         with st.form("name_form"):
-            input_name = st.selectbox("Wähle deinen Namen:", ["Daniel", "Marlon", "Sabbl", "Nico", "Gast"])
+            input_name = st.selectbox("Wähle deinen Namen:", ["Daniel", "Marlon", "Sabbl", "Nico"])
             if st.form_submit_button("Los geht's! 🚀"):
                 st.session_state.player_name = input_name
                 st.rerun()
@@ -204,7 +231,7 @@ if is_player:
         num_ready = len(current_answers)
         st.markdown(f"""
             <div style="text-align:center; padding: 20px; border: 1px dashed #f5c518; border-radius: 15px; background: rgba(245, 197, 24, 0.05);">
-                <span style="font-size: 1.5rem; font-weight: 600;">{num_ready} / 5</span><br>
+                <span style="font-size: 1.5rem; font-weight: 600;">{num_ready} / 4</span><br>
                 Teilnehmer haben bereits abgegeben.<br>
                 <small style="opacity: 0.7;">Warte auf die nächste Runde (automatisch)...</small>
             </div>
@@ -229,7 +256,7 @@ if is_player:
                     st.rerun()
 else:
     # --- MODERATOR & SCOREBOARD ---
-    tab_regie, tab_score = st.tabs(["🎤 MODERATOR (Regie)", "🏆 SCOREBOARD (Beamer)"])
+    tab_regie, tab_score = st.tabs(["🎤 MODERATOR", "🏆 SCOREBOARD"])
 
     with tab_regie:
         st.title("Moderator Zentrale 🎤")
