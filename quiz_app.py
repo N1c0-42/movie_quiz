@@ -362,7 +362,7 @@ if is_player:
                     st.rerun()
 else:
     # --- MODERATOR & SCOREBOARD ---
-    tab_regie, tab_score = st.tabs(["🎤 MODERATOR", "🏆 SCOREBOARD"])
+    tab_regie, tab_score, tab_settings = st.tabs(["🎤 MODERATOR", "🏆 SCOREBOARD", "⚙️ EINSTELLUNGEN"])
 
     with tab_regie:
         st.title("Moderator Zentrale 🎤")
@@ -384,14 +384,6 @@ else:
             if st.button("🗑️ Liste für neue Runde leeren", use_container_width=True, type="primary"):
                 reset_data()
                 st.rerun()
-            
-            # --- GLOBALER RESET ---
-            with st.expander("⚠️ Gefahrenzone"):
-                if st.button("🔥 GESAMTES QUIZ ZURÜCKSETZEN", use_container_width=True):
-                    hard_reset_quiz()
-                    st.success("Alle Daten wurden gelöscht!")
-                    time.sleep(1)
-                    st.rerun()
 
         st.divider()
         show_answers_live()
@@ -408,3 +400,15 @@ else:
             html_content = html_content.replace("</head>", f"{sync_script}</head>")
 
             components.html(html_content, height=1200)
+
+    with tab_settings:
+        st.title("Einstellungen ⚙️")
+        
+        # --- GLOBALER RESET ---
+        st.subheader("Gefahrenzone")
+        st.warning("Hier kannst du das gesamte Quiz auf Null setzen. Alle Punkte gehen verloren!")
+        if st.button("🔥 GESAMTES QUIZ ZURÜCKSETZEN", use_container_width=True, type="primary"):
+            hard_reset_quiz()
+            st.success("Alle Daten wurden gelöscht!")
+            time.sleep(1)
+            st.rerun()
