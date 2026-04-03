@@ -138,16 +138,29 @@ MODERN_STYLE = """
 </style>
 """
 
+ALL_PLAYERS = ["Daniel", "Marlon", "Sabbl", "Nico"]
+
 def load_data():
-    default = {"answers": {}, "last_clear": 0, "scores": {"Daniel": 0, "Marlon": 0, "Sabbl": 0, "Nico": 0}}
+    # Struktur: scores[Name] = {"pts": 0, "qs": 0}
+    default = {
+        "answers": {}, 
+        "last_clear": 0, 
+        "scores": {name: {"pts": 0, "qs": 0} for name in ALL_PLAYERS}, 
+        "points_given": []
+    }
     if os.path.exists(DB_FILE):
         try:
             with open(DB_FILE, "r") as f:
                 data = json.load(f)
-                if "answers" not in data: # Migration
-                    data = {"answers": data, "last_clear": 0, "scores": default["scores"]}
-                if "scores" not in data:
+                # Migration zu Objekt-Struktur falls nötig
+                if "scores" in data:
+                    for name in ALL_PLAYERS:
+                        if name in data["scores"] and isinstance(data["scores"][name], int):
+                            data["scores"][name] = {"pts": data["scores"][name], "qs": 0}
+                else:
                     data["scores"] = default["scores"]
+                
+                if "points_given" not in data: data["points_given"] = []
                 return data
         except: return default
     return default
@@ -158,13 +171,37 @@ def save_data(data):
 
 def reset_data():
     data = load_data()
+    
+    # Automatische Moderator-Erkennung:
+    # Wer aus ALL_PLAYERS hat KEINE Antwort in data["answers"]?
+    submitted_names = list(data["answers"].keys())
+    missing_players = [p for p in ALL_PLAYERS if p not in submitted_names]
+    
+    # Wenn genau einer fehlt, war das wohl der Moderator
+    if len(missing_players) == 1:
+        mod_name = missing_players[0]
+        data["scores"][mod_name]["qs"] += 1
+    
     data["answers"] = {}
+    data["points_given"] = []
     data["last_clear"] = time.time()
     save_data(data)
 
+def hard_reset_quiz():
+    default = {
+        "answers": {}, 
+        "last_clear": time.time(), 
+        "scores": {name: {"pts": 0, "qs": 0} for name in ALL_PLAYERS}, 
+        "points_given": []
+    }
+    save_data(default)
+
 def update_score(name, delta):
     data = load_data()
-    data["scores"][name] = data["scores"].get(name, 0) + delta
+    if name in data["scores"]:
+        data["scores"][name]["pts"] += delta
+        if delta > 0:
+            data["points_given"].append(name)
     save_data(data)
 
 def get_local_ip():
@@ -189,6 +226,8 @@ is_player = query_params.get("view") == "player"
 def show_answers_live():
     data = load_data()
     answers = data.get("answers", {})
+    points_given = data.get("points_given", [])
+    
     if answers:
         st.subheader(f"Eingegangene Lösungen ({len(answers)}):")
         for user, ans in answers.items():
@@ -201,9 +240,15 @@ def show_answers_live():
                     </div>
                 """, unsafe_allow_html=True)
             with col_score:
-                if st.button(f"🎯 +1", key=f"score_{user}"):
+                # Button sperren, wenn schon ein Punkt vergeben wurde
+                is_disabled = user in points_given
+                button_label = "✅ +1" if is_disabled else "🎯 +1"
+                
+                if st.button(button_label, key=f"score_{user}", disabled=is_disabled, use_container_width=True):
                     update_score(user, 1)
                     st.toast(f"Punkt für {user}!")
+                    time.sleep(0.5) # Kurze Pause für den Toast
+                    st.rerun() # Ganze Seite neu laden, um Scoreboard-Tab zu aktualisieren
     else:
         st.info("Warten auf die Teilnehmer... (Aktualisiert automatisch)")
 
@@ -324,6 +369,14 @@ else:
             if st.button("🗑️ Liste für neue Runde leeren", use_container_width=True, type="primary"):
                 reset_data()
                 st.rerun()
+            
+            # --- GLOBALER RESET ---
+            with st.expander("⚠️ Gefahrenzone"):
+                if st.button("🔥 GESAMTES QUIZ ZURÜCKSETZEN", use_container_width=True):
+                    hard_reset_quiz()
+                    st.success("Alle Daten wurden gelöscht!")
+                    time.sleep(1)
+                    st.rerun()
 
         st.divider()
         show_answers_live()

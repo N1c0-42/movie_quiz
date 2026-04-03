@@ -296,10 +296,6 @@
 
     <div class="container" id="board"></div>
 
-    <div class="reset-container">
-        <button class="reset-btn" onclick="resetAll()">Daten löschen & Neustart</button>
-    </div>
-
     <script>
         const playerNames = ["Daniel", "Marlon", "Sabbl", "Nico"];
         let gameState = JSON.parse(localStorage.getItem('quizState')) || {
@@ -313,7 +309,9 @@
         if (window.pythonScores) {
             Object.keys(window.pythonScores).forEach(name => {
                 if (gameState[name]) {
-                    gameState[name].score = window.pythonScores[name];
+                    // Übernehme sowohl Punkte (pts) als auch Fragen (qs)
+                    gameState[name].score = window.pythonScores[name].pts;
+                    gameState[name].questions = window.pythonScores[name].qs;
                 }
             });
         }
@@ -331,7 +329,7 @@
                 if(gameState[n].score > maxScore) maxScore = gameState[n].score;
             });
 
-            // Globalen Balken updaten
+            // Globalen Balken updaten (Gesamtfortschritt aller 4 Spieler)
             const totalPercent = (totalQuestionsAsked / 80) * 100;
             document.getElementById('total-fill').style.width = totalPercent + "%";
             document.getElementById('total-text').innerText = `${totalQuestionsAsked} / 80 Fragen (${Math.round(totalPercent)}%)`;
