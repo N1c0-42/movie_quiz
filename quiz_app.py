@@ -257,9 +257,8 @@ def show_answers_live():
             with col_score:
                 # Button sperren, wenn schon ein Punkt vergeben wurde
                 is_disabled = user in points_given
-                button_label = "✅ +1" if is_disabled else "🎯 +1"
                 
-                if st.button(button_label, key=f"score_{user}", disabled=is_disabled, use_container_width=True):
+                if st.button("🎯 +1", key=f"score_{user}", disabled=is_disabled, use_container_width=True):
                     update_score(user, 1)
                     st.toast(f"Punkt für {user}!")
                     time.sleep(0.5) # Kurze Pause für den Toast
