@@ -148,22 +148,36 @@ def load_data():
         "scores": {name: {"pts": 0, "qs": 0} for name in ALL_PLAYERS}, 
         "points_given": []
     }
-    if os.path.exists(DB_FILE):
-        try:
-            with open(DB_FILE, "r") as f:
-                data = json.load(f)
-                # Migration zu Objekt-Struktur falls nötig
-                if "scores" in data:
-                    for name in ALL_PLAYERS:
-                        if name in data["scores"] and isinstance(data["scores"][name], int):
-                            data["scores"][name] = {"pts": data["scores"][name], "qs": 0}
-                else:
-                    data["scores"] = default["scores"]
+    if not os.path.exists(DB_FILE):
+        return default
+
+    try:
+        with open(DB_FILE, "r") as f:
+            data = json.load(f)
+            
+        # Falls die Datei eine alte Struktur hat (nur answers), konvertiere sie
+        if not isinstance(data, dict) or ("answers" not in data and "scores" not in data):
+            # Sehr alte Version: nur {"Name": "Antwort"}
+            new_data = default.copy()
+            if isinstance(data, dict): new_data["answers"] = data
+            return new_data
+
+        # Sicherstellen, dass alle Schlüssel vorhanden sind
+        for key in default:
+            if key not in data:
+                data[key] = default[key]
+        
+        # Migration der Scores: Falls Name -> Zahl, wandle in Name -> {pts, qs} um
+        for name in ALL_PLAYERS:
+            if name not in data["scores"]:
+                data["scores"][name] = {"pts": 0, "qs": 0}
+            elif isinstance(data["scores"][name], int):
+                data["scores"][name] = {"pts": data["scores"][name], "qs": 0}
                 
-                if "points_given" not in data: data["points_given"] = []
-                return data
-        except: return default
-    return default
+        return data
+    except Exception as e:
+        st.error(f"Fehler beim Laden der Daten: {e}")
+        return default
 
 def save_data(data):
     with open(DB_FILE, "w") as f:
@@ -201,6 +215,7 @@ def update_score(name, delta):
     if name in data["scores"]:
         data["scores"][name]["pts"] += delta
         if delta > 0:
+            if "points_given" not in data: data["points_given"] = []
             data["points_given"].append(name)
     save_data(data)
 
