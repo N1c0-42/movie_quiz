@@ -45,14 +45,15 @@ MODERN_STYLE = """
     
     .stButton>button {
         width: 100%;
-        background: linear-gradient(135deg, #f5c518, #eab308);
+        background-color: #f5c518 !important; /* Fallback für Browser ohne Gradient */
+        background: linear-gradient(135deg, #f5c518, #eab308) !important;
         color: #020617 !important;
         font-weight: 800 !important;
-        font-size: 1.3rem !important; /* Größere Schrift für Tablets */
+        font-size: 1.3rem !important;
         letter-spacing: 0.5px;
-        border-radius: 16px !important; /* Etwas runder */
+        border-radius: 16px !important;
         border: none !important;
-        height: 4.5rem; /* Höherer Button für leichteres Tippen */
+        height: 4.5rem;
         transition: all 0.3s ease !important;
         box-shadow: 0 4px 15px rgba(245, 197, 24, 0.3);
     }
@@ -60,8 +61,19 @@ MODERN_STYLE = """
     .stButton>button:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(245, 197, 24, 0.4);
+        background: linear-gradient(135deg, #fbbf24, #f5c518) !important;
     }
     
+    /* Explizites Ausgrauen für deaktivierte Buttons (z.B. nach Punktevergabe) */
+    .stButton>button:disabled {
+        background: rgba(255, 255, 255, 0.1) !important;
+        color: rgba(255, 255, 255, 0.3) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        box-shadow: none !important;
+        transform: none !important;
+        cursor: not-allowed;
+    }
+
     .stButton>button:active {
         transform: translateY(0);
     }
