@@ -139,13 +139,15 @@ MODERN_STYLE = """
 """
 
 def load_data():
-    default = {"answers": {}, "last_clear": 0}
+    default = {"answers": {}, "last_clear": 0, "scores": {"Daniel": 0, "Marlon": 0, "Sabbl": 0, "Nico": 0}}
     if os.path.exists(DB_FILE):
         try:
             with open(DB_FILE, "r") as f:
                 data = json.load(f)
-                if "answers" not in data: # Migration alter Daten
-                    return {"answers": data, "last_clear": 0}
+                if "answers" not in data: # Migration
+                    data = {"answers": data, "last_clear": 0, "scores": default["scores"]}
+                if "scores" not in data:
+                    data["scores"] = default["scores"]
                 return data
         except: return default
     return default
@@ -155,7 +157,14 @@ def save_data(data):
         json.dump(data, f)
 
 def reset_data():
-    data = {"answers": {}, "last_clear": time.time()}
+    data = load_data()
+    data["answers"] = {}
+    data["last_clear"] = time.time()
+    save_data(data)
+
+def update_score(name, delta):
+    data = load_data()
+    data["scores"][name] = data["scores"].get(name, 0) + delta
     save_data(data)
 
 def get_local_ip():
@@ -183,12 +192,18 @@ def show_answers_live():
     if answers:
         st.subheader(f"Eingegangene Lösungen ({len(answers)}):")
         for user, ans in answers.items():
-            st.markdown(f"""
-                <div class="answer-card">
-                    <small style="color: #f5c518; font-weight: 600; letter-spacing: 0.5px;">{user.upper()}</small><br>
-                    <p style="margin-top:8px; font-size: 1.1rem; color: #f8fafc;">{ans}</p>
-                </div>
-            """, unsafe_allow_html=True)
+            col_ans, col_score = st.columns([4, 1])
+            with col_ans:
+                st.markdown(f"""
+                    <div class="answer-card">
+                        <small style="color: #f5c518; font-weight: 600; letter-spacing: 0.5px;">{user.upper()}</small><br>
+                        <p style="margin-top:8px; font-size: 1.1rem; color: #f8fafc;">{ans}</p>
+                    </div>
+                """, unsafe_allow_html=True)
+            with col_score:
+                if st.button(f"🎯 +1", key=f"score_{user}"):
+                    update_score(user, 1)
+                    st.toast(f"Punkt für {user}!")
     else:
         st.info("Warten auf die Teilnehmer... (Aktualisiert automatisch)")
 
@@ -315,6 +330,13 @@ else:
 
     with tab_score:
         if os.path.exists(HTML_FILE):
+            data = load_data()
+            scores_json = json.dumps(data.get("scores", {}))
             with open(HTML_FILE, "r", encoding="utf-8") as f:
                 html_content = f.read()
+
+            # Injiziere die Scores als globale JS Variable vor dem schließenden </head>
+            sync_script = f"<script>window.pythonScores = {scores_json};</script>"
+            html_content = html_content.replace("</head>", f"{sync_script}</head>")
+
             components.html(html_content, height=1200)

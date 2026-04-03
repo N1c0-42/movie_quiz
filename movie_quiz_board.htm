@@ -309,6 +309,15 @@
             Nico: { score: 0, questions: 0 }
         };
 
+        // SYNC: Übernehme Scores von Python, falls vorhanden
+        if (window.pythonScores) {
+            Object.keys(window.pythonScores).forEach(name => {
+                if (gameState[name]) {
+                    gameState[name].score = window.pythonScores[name];
+                }
+            });
+        }
+
         function render() {
             const board = document.getElementById('board');
             board.innerHTML = '';
