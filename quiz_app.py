@@ -118,40 +118,51 @@ MODERN_STYLE = """
 
     /* Optimierung für Number Inputs (Score Korrektur) */
     .stNumberInput input {
-        background-color: rgba(30, 41, 59, 0.6) !important;
+        background-color: rgba(30, 41, 49, 0.8) !important;
         color: white !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
         border-radius: 10px !important;
     }
     
+    /* Plus/Minus Buttons der Number Inputs */
+    .stNumberInput button {
+        background-color: #1e293b !important;
+        color: #f5c518 !important;
+    }
+
     .stNumberInput label {
         color: #94a3b8 !important;
     }
 
     /* Expander Styling (Moderator Korrektur) */
-    div[data-testid="stExpander"] {
-        background-color: #1e293b !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    div[data-testid="stExpander"], .stExpander, details {
+        background-color: #0f172a !important;
+        border: 1px solid #f5c518 !important;
         border-radius: 15px !important;
     }
     
-    div[data-testid="stExpander"] summary {
-        color: #f5c518 !important;
+    /* Erzwinge dunklen Hintergrund für ALLE Unterelemente des Expanders */
+    div[data-testid="stExpander"] *, .stExpander * {
         background-color: transparent !important;
+        color: white !important;
     }
 
-    div[data-testid="stExpander"] [data-testid="stExpanderDetails"] {
-        background-color: #0f172a !important;
-        color: white !important;
-        border-radius: 0 0 15px 15px !important;
+    div[data-testid="stExpander"] summary, .stExpander summary {
+        background-color: #1e293b !important;
+        color: #f5c518 !important;
+        padding: 10px 15px !important;
+        border-radius: 15px 15px 0 0 !important;
     }
     
-    div[data-testid="stExpander"] p, div[data-testid="stExpander"] label, div[data-testid="stExpander"] span {
-        color: white !important;
+    div[data-testid="stExpander"] summary * {
+        color: #f5c518 !important;
+        font-weight: 600 !important;
     }
 
-    div[data-testid="stExpander"] svg {
-        fill: #f5c518 !important;
+    div[data-testid="stExpander"] [data-testid="stExpanderDetails"], .stExpander [data-testid="stExpanderDetails"] {
+        background-color: #0f172a !important;
+        padding: 20px !important;
+        border-radius: 0 0 15px 15px !important;
     }
 
     /* Styling für die Tabs (Moderator Navigation) */
@@ -259,6 +270,9 @@ def hard_reset_quiz():
         "points_given": []
     }
     save_data(default)
+    
+    # Erhöhe Reset-ID, um Keys der Widgets zu ändern (erzwingt UI-Reset auf 0)
+    st.session_state.reset_id += 1
     
     # Session State der Input-Felder löschen, damit sie wieder auf 0 stehen
     for name in ALL_PLAYERS:
@@ -465,9 +479,9 @@ else:
                 with col_n:
                     st.markdown(f"<div style='padding-top: 35px;'><b>{name}</b></div>", unsafe_allow_html=True)
                 with col_p:
-                    p_val = st.number_input("Punkte", value=data["scores"][name]["pts"], key=f"edit_pts_{name}", step=1)
+                    p_val = st.number_input("Punkte", value=data["scores"][name]["pts"], key=f"edit_pts_{name}_{st.session_state.reset_id}", step=1)
                 with col_q:
-                    q_val = st.number_input("Fragen", value=data["scores"][name]["qs"], key=f"edit_qs_{name}", step=1)
+                    q_val = st.number_input("Fragen", value=data["scores"][name]["qs"], key=f"edit_qs_{name}_{st.session_state.reset_id}", step=1)
                 new_scores[name] = {"pts": p_val, "qs": q_val}
             
             st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
@@ -502,5 +516,4 @@ else:
         if st.button("🔥 GESAMTES QUIZ ZURÜCKSETZEN", use_container_width=True, type="primary"):
             hard_reset_quiz()
             st.success("Alle Daten wurden gelöscht!")
-            time.sleep(1)
             st.rerun()
