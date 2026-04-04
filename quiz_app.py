@@ -129,20 +129,23 @@ MODERN_STYLE = """
     }
 
     /* Expander Styling (Moderator Korrektur) */
-    .stExpander {
-        background: rgba(30, 41, 59, 0.4) !important;
+    div[data-testid="stExpander"] {
+        background-color: rgba(30, 41, 59, 0.4) !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
         border-radius: 15px !important;
+        color: white !important;
     }
     
-    .stExpander [data-testid="stExpanderHeader"] p {
-        color: #f5c518 !important; /* Goldener Titel für den Expander */
-        font-weight: 600 !important;
-        font-size: 1.1rem !important;
+    div[data-testid="stExpander"] summary {
+        color: #f5c518 !important;
     }
-    
-    .stExpander [data-testid="stExpanderDetails"] {
-        padding: 20px !important;
+
+    div[data-testid="stExpander"] summary:hover {
+        color: #fbbf24 !important;
+    }
+
+    div[data-testid="stExpander"] svg {
+        fill: #f5c518 !important;
     }
 
     /* Styling für die Tabs (Moderator Navigation) */
