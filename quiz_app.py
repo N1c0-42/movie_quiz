@@ -248,14 +248,17 @@ def reset_data():
     data = load_data()
     
     # Automatische Moderator-Erkennung:
-    # Wer aus ALL_PLAYERS hat KEINE Antwort in data["answers"]?
     submitted_names = list(data["answers"].keys())
     missing_players = [p for p in ALL_PLAYERS if p not in submitted_names]
     
-    # Wenn genau einer fehlt, war das wohl der Moderator
+    # Wenn genau einer fehlt, war das wohl der Moderator -> Fragenanzahl +1
     if len(missing_players) == 1:
         mod_name = missing_players[0]
         data["scores"][mod_name]["qs"] += 1
+        # Synchronisation mit manueller Korrektur
+        qs_key = f"edit_qs_{mod_name}_{st.session_state.reset_id}"
+        if qs_key in st.session_state:
+            del st.session_state[qs_key]
     
     data["answers"] = {}
     data["points_given"] = []
@@ -271,15 +274,13 @@ def hard_reset_quiz():
     }
     save_data(default)
     
-    # Erhöhe Reset-ID, um Keys der Widgets zu ändern (erzwingt UI-Reset auf 0)
+    # Session State der Input-Felder löschen (alle Versionen der reset_id)
+    for key in list(st.session_state.keys()):
+        if key.startswith("edit_pts_") or key.startswith("edit_qs_"):
+            del st.session_state[key]
+            
+    # Erhöhe Reset-ID für neue Widget-Generation
     st.session_state.reset_id += 1
-    
-    # Session State der Input-Felder löschen, damit sie wieder auf 0 stehen
-    for name in ALL_PLAYERS:
-        if f"edit_pts_{name}" in st.session_state:
-            del st.session_state[f"edit_pts_{name}"]
-        if f"edit_qs_{name}" in st.session_state:
-            del st.session_state[f"edit_qs_{name}"]
 
 def update_score(name, delta_pts=0, delta_qs=0):
     data = load_data()
@@ -290,6 +291,12 @@ def update_score(name, delta_pts=0, delta_qs=0):
             if "points_given" not in data: data["points_given"] = []
             data["points_given"].append(name)
     save_data(data)
+    
+    # Synchronisation mit manueller Korrektur: Lösche Cache, damit Widgets neu laden
+    pts_key = f"edit_pts_{name}_{st.session_state.reset_id}"
+    qs_key = f"edit_qs_{name}_{st.session_state.reset_id}"
+    if pts_key in st.session_state: del st.session_state[pts_key]
+    if qs_key in st.session_state: del st.session_state[qs_key]
 
 def set_score(name, pts, qs):
     data = load_data()
