@@ -128,6 +128,23 @@ MODERN_STYLE = """
         color: #94a3b8 !important;
     }
 
+    /* Expander Styling (Moderator Korrektur) */
+    .stExpander {
+        background: rgba(30, 41, 59, 0.4) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 15px !important;
+    }
+    
+    .stExpander [data-testid="stExpanderHeader"] p {
+        color: #f5c518 !important; /* Goldener Titel für den Expander */
+        font-weight: 600 !important;
+        font-size: 1.1rem !important;
+    }
+    
+    .stExpander [data-testid="stExpanderDetails"] {
+        padding: 20px !important;
+    }
+
     /* Styling für die Tabs (Moderator Navigation) */
     .stTabs [data-baseweb="tab-list"] {
         gap: 10px;
