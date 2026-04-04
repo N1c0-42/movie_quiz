@@ -255,10 +255,9 @@ def reset_data():
     if len(missing_players) == 1:
         mod_name = missing_players[0]
         data["scores"][mod_name]["qs"] += 1
-        # Synchronisation mit manueller Korrektur
+        # Direkte Synchronisation mit manueller Korrektur
         qs_key = f"edit_qs_{mod_name}_{st.session_state.reset_id}"
-        if qs_key in st.session_state:
-            del st.session_state[qs_key]
+        st.session_state[qs_key] = data["scores"][mod_name]["qs"]
     
     data["answers"] = {}
     data["points_given"] = []
@@ -274,13 +273,13 @@ def hard_reset_quiz():
     }
     save_data(default)
     
-    # Session State der Input-Felder löschen (alle Versionen der reset_id)
+    # Erhöhe Reset-ID für neue Widget-Generation (setzt alles auf 0)
+    st.session_state.reset_id += 1
+    
+    # Alle alten State-Einträge säubern
     for key in list(st.session_state.keys()):
         if key.startswith("edit_pts_") or key.startswith("edit_qs_"):
             del st.session_state[key]
-            
-    # Erhöhe Reset-ID für neue Widget-Generation
-    st.session_state.reset_id += 1
 
 def update_score(name, delta_pts=0, delta_qs=0):
     data = load_data()
@@ -292,11 +291,11 @@ def update_score(name, delta_pts=0, delta_qs=0):
             data["points_given"].append(name)
     save_data(data)
     
-    # Synchronisation mit manueller Korrektur: Lösche Cache, damit Widgets neu laden
+    # Direkte Synchronisation mit manueller Korrektur für sofortiges Feedback
     pts_key = f"edit_pts_{name}_{st.session_state.reset_id}"
     qs_key = f"edit_qs_{name}_{st.session_state.reset_id}"
-    if pts_key in st.session_state: del st.session_state[pts_key]
-    if qs_key in st.session_state: del st.session_state[qs_key]
+    st.session_state[pts_key] = data["scores"][name]["pts"]
+    st.session_state[qs_key] = data["scores"][name]["qs"]
 
 def set_score(name, pts, qs):
     data = load_data()

@@ -269,6 +269,11 @@
         }
 
         render();
+
+        // AUTO-REFRESH: Lädt die Seite alle 3 Sekunden neu, um Scores aktuell zu halten
+        setInterval(() => {
+            location.reload();
+        }, 3000);
     </script>
 </body>
 </html>
