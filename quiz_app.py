@@ -222,13 +222,21 @@ def hard_reset_quiz():
     }
     save_data(default)
 
-def update_score(name, delta):
+def update_score(name, delta_pts=0, delta_qs=0):
     data = load_data()
     if name in data["scores"]:
-        data["scores"][name]["pts"] += delta
-        if delta > 0:
+        data["scores"][name]["pts"] += delta_pts
+        data["scores"][name]["qs"] += delta_qs
+        if delta_pts > 0:
             if "points_given" not in data: data["points_given"] = []
             data["points_given"].append(name)
+    save_data(data)
+
+def set_score(name, pts, qs):
+    data = load_data()
+    if name in data["scores"]:
+        data["scores"][name]["pts"] = pts
+        data["scores"][name]["qs"] = qs
     save_data(data)
 
 def get_local_ip():
@@ -271,7 +279,7 @@ def show_answers_live():
                 is_disabled = user in points_given
                 
                 if st.button("🎯 +1", key=f"score_{user}", disabled=is_disabled, use_container_width=True):
-                    update_score(user, 1)
+                    update_score(user, delta_pts=1)
                     st.toast(f"Punkt für {user}!")
                     time.sleep(0.5) # Kurze Pause für den Toast
                     st.rerun() # Ganze Seite neu laden, um Scoreboard-Tab zu aktualisieren
@@ -398,6 +406,25 @@ else:
 
         st.divider()
         show_answers_live()
+        
+        st.divider()
+        with st.expander("🛠️ Manuelle Score-Korrektur"):
+            data = load_data()
+            for name in ALL_PLAYERS:
+                col_n, col_p, col_q, col_s = st.columns([2, 1, 1, 1])
+                with col_n:
+                    st.markdown(f"<div style='padding-top: 35px;'><b>{name}</b></div>", unsafe_allow_html=True)
+                with col_p:
+                    p_val = st.number_input("Punkte", value=data["scores"][name]["pts"], key=f"edit_pts_{name}", step=1)
+                with col_q:
+                    q_val = st.number_input("Fragen", value=data["scores"][name]["qs"], key=f"edit_qs_{name}", step=1)
+                with col_s:
+                    st.markdown("<div style='padding-top: 28px;'></div>", unsafe_allow_html=True)
+                    if st.button("Speichern", key=f"save_{name}"):
+                        set_score(name, p_val, q_val)
+                        st.success(f"Score für {name} aktualisiert!")
+                        time.sleep(0.5)
+                        st.rerun()
 
     with tab_score:
         if os.path.exists(HTML_FILE):
