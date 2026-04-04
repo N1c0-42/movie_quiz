@@ -116,6 +116,18 @@ MODERN_STYLE = """
         padding: 4px !important;
     }
 
+    /* Optimierung für Number Inputs (Score Korrektur) */
+    .stNumberInput input {
+        background-color: rgba(30, 41, 59, 0.6) !important;
+        color: white !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 10px !important;
+    }
+    
+    .stNumberInput label {
+        color: #94a3b8 !important;
+    }
+
     /* Styling für die Tabs (Moderator Navigation) */
     .stTabs [data-baseweb="tab-list"] {
         gap: 10px;
@@ -221,6 +233,13 @@ def hard_reset_quiz():
         "points_given": []
     }
     save_data(default)
+    
+    # Session State der Input-Felder löschen, damit sie wieder auf 0 stehen
+    for name in ALL_PLAYERS:
+        if f"edit_pts_{name}" in st.session_state:
+            del st.session_state[f"edit_pts_{name}"]
+        if f"edit_qs_{name}" in st.session_state:
+            del st.session_state[f"edit_qs_{name}"]
 
 def update_score(name, delta_pts=0, delta_qs=0):
     data = load_data()
