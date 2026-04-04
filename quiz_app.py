@@ -130,18 +130,24 @@ MODERN_STYLE = """
 
     /* Expander Styling (Moderator Korrektur) */
     div[data-testid="stExpander"] {
-        background-color: rgba(30, 41, 59, 0.4) !important;
+        background-color: #1e293b !important;
         border: 1px solid rgba(255, 255, 255, 0.1) !important;
         border-radius: 15px !important;
-        color: white !important;
     }
     
     div[data-testid="stExpander"] summary {
         color: #f5c518 !important;
+        background-color: transparent !important;
     }
 
-    div[data-testid="stExpander"] summary:hover {
-        color: #fbbf24 !important;
+    div[data-testid="stExpander"] [data-testid="stExpanderDetails"] {
+        background-color: #0f172a !important;
+        color: white !important;
+        border-radius: 0 0 15px 15px !important;
+    }
+    
+    div[data-testid="stExpander"] p, div[data-testid="stExpander"] label, div[data-testid="stExpander"] span {
+        color: white !important;
     }
 
     div[data-testid="stExpander"] svg {
@@ -291,6 +297,10 @@ def get_local_ip():
 
 st.set_page_config(page_title="Filmquiz Deluxe", page_icon="🎬", layout="wide")
 st.markdown(MODERN_STYLE, unsafe_allow_html=True)
+
+# Initialisiere Reset-ID für Widget-Key-Rotation (erzwingt Reset der Inputs)
+if "reset_id" not in st.session_state:
+    st.session_state.reset_id = 0
 
 query_params = st.query_params
 is_player = query_params.get("view") == "player"
@@ -449,21 +459,26 @@ else:
         st.divider()
         with st.expander("🛠️ Manuelle Score-Korrektur"):
             data = load_data()
+            new_scores = {}
             for name in ALL_PLAYERS:
-                col_n, col_p, col_q, col_s = st.columns([2, 1, 1, 1])
+                col_n, col_p, col_q = st.columns([2, 1, 1])
                 with col_n:
                     st.markdown(f"<div style='padding-top: 35px;'><b>{name}</b></div>", unsafe_allow_html=True)
                 with col_p:
                     p_val = st.number_input("Punkte", value=data["scores"][name]["pts"], key=f"edit_pts_{name}", step=1)
                 with col_q:
                     q_val = st.number_input("Fragen", value=data["scores"][name]["qs"], key=f"edit_qs_{name}", step=1)
-                with col_s:
-                    st.markdown("<div style='padding-top: 28px;'></div>", unsafe_allow_html=True)
-                    if st.button("Speichern", key=f"save_{name}"):
-                        set_score(name, p_val, q_val)
-                        st.success(f"Score für {name} aktualisiert!")
-                        time.sleep(0.5)
-                        st.rerun()
+                new_scores[name] = {"pts": p_val, "qs": q_val}
+            
+            st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+            if st.button("💾 Alle Scores speichern", use_container_width=True):
+                current_data = load_data()
+                for name in ALL_PLAYERS:
+                    current_data["scores"][name] = new_scores[name]
+                save_data(current_data)
+                st.success("Alle Scores wurden erfolgreich aktualisiert!")
+                time.sleep(0.8)
+                st.rerun()
 
     with tab_score:
         if os.path.exists(HTML_FILE):
